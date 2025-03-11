@@ -22,15 +22,15 @@ dataset = 'cub_200'
 # base_network needs to be one of ['InceptionV3', 'InceptionV3SE',
 # 'InceptionV4', 'InceptionResnetV2', 'InceptionResnetV2SE', 'ResNet50',
 # 'ResNet101', 'ResNet152']
-base_networks = ['InceptionV3', 'InceptionV3SE','InceptionV4', 'InceptionResnetV2', 'InceptionResnetV2SE', 'ResNet50','ResNet101', 'ResNet152']
-base_network = base_networks[2]
+# base_networks = ['InceptionV3', 'InceptionV3SE','InceptionV4', 'InceptionResnetV2', 'InceptionResnetV2SE', 'ResNet50','ResNet101', 'ResNet152']
+# base_network = base_networks[2]
 # checkpoints_path = './checkpoints/inception/inception_v3_ILSVRC_299.ckpt'  # ImageNet
 # checkpoints_path = './checkpoints/inception/inception_v3_iNat_299.ckpt'
 # checkpoints_path = './checkpoints/inception/inception_v3_iNat_448.ckpt'
-checkpoints_path = './checkpoints/inception/inception_v4_iNat_448_FT_560.ckpt'
+# checkpoints_path = './checkpoints/inception/inception_v4_iNat_448_FT_560.ckpt'
 
-# base_network = 'ResNet101'
-# checkpoints_path = './checkpoints/resnet/resnet_101_ILSVRC_iNat_299.ckpt'
+base_network = 'ResNet101'
+checkpoints_path = './checkpoints/resnet/resnet_101_ILSVRC_iNat_299.ckpt'
 
 image_size = 299
 moving_average_decay = 0.9999

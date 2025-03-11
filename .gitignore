@@ -5,6 +5,6 @@ run.sh
 feature/
 data/
 checkpoints/
-.venv/
+.venv*/
 .vscode/
 tensorflow*.whl
