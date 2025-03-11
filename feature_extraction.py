@@ -7,6 +7,8 @@ import os
 import sys
 import time
 import tensorflow as tf
+import logging
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 slim = tf.contrib.slim
 sys.path.insert(0, './slim/')
@@ -20,14 +22,23 @@ dataset = 'cub_200'
 # base_network needs to be one of ['InceptionV3', 'InceptionV3SE',
 # 'InceptionV4', 'InceptionResnetV2', 'InceptionResnetV2SE', 'ResNet50',
 # 'ResNet101', 'ResNet152']
-base_network = 'InceptionV3'
-checkpoints_path = './checkpoints/inception/inception_v3_iNat_299.ckpt'
+base_networks = ['InceptionV3', 'InceptionV3SE','InceptionV4', 'InceptionResnetV2', 'InceptionResnetV2SE', 'ResNet50','ResNet101', 'ResNet152']
+base_network = base_networks[2]
+# checkpoints_path = './checkpoints/inception/inception_v3_ILSVRC_299.ckpt'  # ImageNet
+# checkpoints_path = './checkpoints/inception/inception_v3_iNat_299.ckpt'
+# checkpoints_path = './checkpoints/inception/inception_v3_iNat_448.ckpt'
+checkpoints_path = './checkpoints/inception/inception_v4_iNat_448_FT_560.ckpt'
+
 # base_network = 'ResNet101'
 # checkpoints_path = './checkpoints/resnet/resnet_101_ILSVRC_iNat_299.ckpt'
 
 image_size = 299
 moving_average_decay = 0.9999
-fea_dim = 2048
+
+if base_network == 'InceptionV4':
+    fea_dim = 1536
+else:
+    fea_dim = 2048
 
 # Read train and val list.
 train_list = []
@@ -128,6 +139,9 @@ with tf.Graph().as_default():
             fea = sess.run(net, feed_dict={image_path:train_list[i][0]})
             fea_train[i, :] = fea
             label_train[i] = train_list[i][1]
+        print(f"{len(fea_train)}/{len(fea_train)}", end=" ")
+        print("{:.2f}s".format(time.time() - start))
+
         print('Feature extraction on validation set...')
         for i in range(len(fea_val)):
             if i%1000 == 0:
@@ -135,6 +149,8 @@ with tf.Graph().as_default():
             fea = sess.run(net, feed_dict={image_path:val_list[i][0]})
             fea_val[i, :] = fea
             label_val[i] = val_list[i][1]
+        print(f"{len(fea_val)}/{len(fea_val)}", end=" ")
+        print("{:.2f}s".format(time.time() - start))
 
 model_name = checkpoints_path.split('/')[-1].split('.ckpt')[0]
 if not os.path.exists(os.path.join('./feature', model_name)):
