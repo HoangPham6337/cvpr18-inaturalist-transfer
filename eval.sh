@@ -1,7 +1,7 @@
 #!/bin/sh
 # CUDA_VISIBLE_DEVICES=1 ./eval.sh
 
-DATASET_NAME=cub_200
+DATASET_NAME=inat2017_other
 DATASET_DIR=./data/
 MODEL_DIR=./checkpoints/${DATASET_NAME}
 

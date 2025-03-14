@@ -27,6 +27,8 @@ datasets_map = {
                  'num_classes': 1000},
   'inat2017': {'num_samples': {'train': 665473, 'validation': 9697},
                'num_classes': 5089},
+  'inat2017_other': {'num_samples': {'train': 318668, 'validation': 35408},
+               'num_classes': 1985},
   'aircraft': {'num_samples': {'train': 6667, 'validation': 3333},
                'num_classes': 100},
   'cub_200': {'num_samples': {'train': 5994, 'validation': 5794},
@@ -40,7 +42,9 @@ datasets_map = {
   'stanford_cars': {'num_samples': {'train': 8144, 'validation': 8041},
                     'num_classes': 196},
   'stanford_dogs': {'num_samples': {'train': 12000, 'validation': 8580},
-                    'num_classes': 120}
+                    'num_classes': 120},
+  'haute_garonne': {'num_samples': {'train': 49111, 'validation': 12278},
+                    'num_classes': 284},
 }
 
 
