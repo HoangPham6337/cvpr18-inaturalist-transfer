@@ -3,15 +3,29 @@ import shutil
 from typing import Optional
 
 
-def species_path_extract(dir: str) -> list[str]:
+def species_path_extract(data_path: str) -> list[str]:
+    """
+    Extracts paths to species directories within a given dataset directory.
+    
+    Args:
+        data_path: The base directory containing class folders.
+
+    Returns:
+        List[str]: A list of full paths to species directory.
+
+    Raises:
+        FileNotFoundError: If the given directory does not exists or is not a directory.
+    """
     species_folder_path: list[str] = []
-    for species_class in os.listdir(dir):
-        class_path = os.path.join(dir, species_class)
-        if os.path.isdir(class_path):
-            for species in os.listdir(class_path):
-                species_path = os.path.join(class_path, species)
-                if os.path.isdir(species_path):
-                    species_folder_path.append(species_path)
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Directory not found: {data_path}")
+
+    for class_entry in os.scandir(data_path):
+        if class_entry.is_dir():
+            class_path = class_entry.path
+            for species_entry in os.scandir(class_path):
+                if species_entry.is_dir():
+                    species_folder_path.extend(species_entry.path)
     return species_folder_path
 
 
@@ -21,24 +35,37 @@ def copy_file(
     isOther: bool,
     message: Optional[str] = None,
 ):
+    """
+    Copies files from species directories into a structured output directory.
+
+    Args:
+        species_paths: List of species directory paths.
+        out_dir: The output directory where files should be copied.
+        is_other: Determines if species belong to the 'Other' category.
+        other_dir: Name of the 'Other' category folder. Defaults to "Other".
+        message: Message to display before processing. Defaults to None.
+    """
     total = len(species_paths)
     if message:
         print(message)
+    
     for idx, species in enumerate(species_paths, 1):
+        species_parts = species.split(os.sep)
+
         if isOther:
-            species_base = species.split("/")[-1]
+            species_base = species_parts[-1]
+            species_out_dir = os.path.join(out_dir, OTHER_DIR, species_base)
         else:
-            species_base = "/".join(species.split("/")[-2:])
-        species_out_dir = os.path.join(out_dir, species_base)
+            species_base = os.path.join(species_parts[-2], species_parts[-1])
+            species_out_dir = os.path.join(out_dir, species_base)
 
-        if not os.path.exists(species_out_dir):
-            os.makedirs(species_out_dir)
+        os.makedirs(species_out_dir, exist_ok=True)
 
-        print(f"{idx}/{total} Copying {species} to {out_dir}/{species_base}")
+        print(f"{idx}/{total} Copying {species} to {species_out_dir}")
 
         for file in os.listdir(species):
             src = os.path.join(species, file)
-            dst = os.path.join(species_out_dir)
+            dst = os.path.join(species_out_dir, file)
             if not os.path.exists(dst):
                 shutil.copy2(src, dst)
 
@@ -62,6 +89,6 @@ if __name__ == "__main__":
     ]
 
     message = "Stage 1: Copying species not in Haute-Garonne to 'Other'"
-    copy_file(other_folder_path, OUTPUT_DIR, True)
+    copy_file(other_folder_path, OUTPUT_DIR, True, message)
     message = "Stage 2: Copying species in Haute-Garonne to their new folder"
     copy_file(hg_folder_path, OUTPUT_DIR, False, message)
