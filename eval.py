@@ -17,7 +17,8 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import warnings
+warnings.filterwarnings('ignore')
 import math
 import sys
 import tensorflow as tf
@@ -161,11 +162,24 @@ def main(_):
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
 
+    num_classes = dataset.num_classes
+    labels_one_hot = tf.one_hot(labels, depth=num_classes)
+    predictions_one_hot = tf.one_hot(predictions, depth=num_classes)
+
+    # precision, precision_update = tf.metrics.precision(labels_one_hot, predictions_one_hot)
+    # recall, recall_update = tf.metrics.recall(labels_one_hot, predictions_one_hot)
+    f1_score, f1_update = tf.contrib.metrics.f1_score(labels_one_hot, predictions_one_hot)
+    # f1_score = 2 * ((precision * recall) / (precision + recall + 1e-10))
+    # f1_update = tf.group(precision_update, recall_update)
+
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
         'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
-        'Recall_5': slim.metrics.streaming_recall_at_k(
-            logits, labels, 5),
+        'Recall_5': slim.metrics.streaming_recall_at_k(logits, labels, 5),
+        # 'Precision': (precision, precision_update),
+        # 'Recall': (recall, recall_update),
+        # 'F1-Score': (f1_score, f1_update)
+        'F1-Score': (f1_score, f1_update)
     })
 
     # Print the summaries to screen.

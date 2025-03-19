@@ -5,7 +5,8 @@ python convert_dataset.py --dataset_name=cub_200 --num_shards=10
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import warnings
+warnings.filterwarnings('ignore')
 import math
 import os
 import random

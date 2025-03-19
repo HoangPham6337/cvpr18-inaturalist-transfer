@@ -2,7 +2,9 @@
 # CUDA_VISIBLE_DEVICES=0 ./train.sh
 
 # DATASET_NAME=cub_200
-DATASET_NAME=inat2017_other
+# DATASET_NAME=inat2017
+
+DATASET_NAME=haute_garonne_other
 DATASET_DIR=./data/
 MODEL_DIR=./checkpoints/${DATASET_NAME}
 CHECKPOINT_PATH=./checkpoints/inception/inception_v3_iNat_299.ckpt
@@ -24,7 +26,7 @@ TRAIN_IMAGE_SIZE=299
 
 LOG_STEPS=10
 SAVE_SUMMARIES_SECS=10
-SAVE_MODEL_SECS=60
+SAVE_MODEL_SECS=200
 
 # fine-tune last layer for 30 epochs.
 # cub_200 has 5994 training images, with 64 train batch size:
