@@ -41,7 +41,7 @@ CVPR2018
 
 **This project is based on the original work from:**
 - [Large Scale Fine-Grained Categorization and Domain-Specific Transfer Learning (CVPR 2018)](https://arxiv.org/abs/1806.06193)
-- [Original GitHub Repository](https://github.com/richardaecn/cvpr17-inaturalist-transfer)
+- [Original GitHub Repository](https://github.com/richardaecn/cvpr18-inaturalist-transfer)
 
 ## Dependencies and Installation
 Setting up TensorFlow 1.x with GPU acceleration is challenging due to outdated CUDA and cuDNN requirements. The original repository used Python 3.5.6, but due to dependency issues (pip, OpenSSL, etc.), Python 3.6.13 was found to be the most stable version.
