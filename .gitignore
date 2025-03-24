@@ -1,10 +1,13 @@
 *.pyc
+.python-version
 .ipynb_checkpoints
 test.ipynb
 run.sh
 feature/
 data/
 checkpoints/
+Failed Export/
+Model Structures/
 .venv*/
 .vscode/
 tensorflow*.whl
