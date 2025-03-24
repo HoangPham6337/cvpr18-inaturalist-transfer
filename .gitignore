@@ -10,6 +10,7 @@ Failed Export/
 Model Structures/
 .venv*/
 .vscode/
+.idea/
 tensorflow*.whl
 *.h5
 *.onnx
