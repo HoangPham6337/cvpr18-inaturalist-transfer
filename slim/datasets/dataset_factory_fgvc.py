@@ -25,8 +25,11 @@ from datasets import fgvc
 datasets_map = {
   'ILSVRC2012': {'num_samples': {'train': 1281167, 'validation': 50000},
                  'num_classes': 1000},
-  'inat2017': {'num_samples': {'train': 318668, 'validation': 35408},
+  # 'inat2017': {'num_samples': {'train': 318668, 'validation': 35408},
+  #              'num_classes': 1985},
+  'inat2017': {'num_samples': {'train': 1, 'validation': 142},
                'num_classes': 1985},
+
   'haute_garonne': {'num_samples': {'train': 55250, 'validation': 6139},
                'num_classes': 284},
   'haute_garonne_other': {'num_samples': {'train': 55250, 'validation': 6139},

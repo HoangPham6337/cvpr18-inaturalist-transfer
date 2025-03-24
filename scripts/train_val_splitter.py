@@ -9,7 +9,7 @@ def save_data(file_path, data):
         for img_path, species_id in data:
             file.write(f"{img_path}: {species_id}\n")
 
-DATA_DIR = "/home/tom-maverick/Documents/02_GitHub/cvpr18-inaturalist-transfer/data/haute_garonne/"
+DATA_DIR = "/home/tom-maverick/Documents/02_GitHub/cvpr18-inaturalist-transfer/data/inat2017/"
 OUTPUT_DIR = DATA_DIR 
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -28,10 +28,11 @@ for species_class in os.listdir(DATA_DIR):
             species_path = os.path.join(class_path, species)
 
             if os.path.isdir(species_path):
-                if species not in species_to_id:
-                    if species_class in ["Aves", "Insecta"]:
+                if species not in species_to_id and species == "Acanthis flammea":
+                    if species_class in ["Aves"]:
+                    # if species_class in ["Aves", "Insecta"]:
                         species_to_id[species] = species_id_counter
-                        if species not in species_dict.keys():
+                        if species not in species_dict.keys() :
                             species_dict[species_id_counter] = species
                         species_id_counter += 1
 
@@ -63,10 +64,10 @@ save_data(os.path.join(OUTPUT_DIR, "dataset_manifest.txt"), image_list)
 with open(os.path.join(OUTPUT_DIR, "dataset_species_labels.json"), "w", encoding='utf-8') as file:
     json.dump(species_dict, file, indent=2)
 
-random.shuffle(image_list)
+# random.shuffle(image_list)
 
 train_data, val_data = train_test_split(
-    image_list, test_size=0.1, random_state=42, stratify=[x[1] for x in image_list]
+    image_list, test_size=0.99, random_state=42, stratify=[x[1] for x in image_list]
 )
 
 save_data(os.path.join(OUTPUT_DIR, "train.txt"), train_data)

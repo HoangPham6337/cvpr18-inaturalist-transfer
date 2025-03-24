@@ -12,7 +12,7 @@ EVAL_IMAGE_SIZE=299
 
 EVAL_INTERVAL_SECS=0
 
-python eval.py \
+python export_model_tf1.py \
     --checkpoint_path=${MODEL_DIR} \
     --eval_dir=${MODEL_DIR} \
     --dataset_dir=${DATASET_DIR} \
