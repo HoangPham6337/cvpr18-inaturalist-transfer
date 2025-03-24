@@ -1,8 +1,9 @@
 import json
 import pandas as pd
+import numpy as np
 from typing import Set, Optional, Dict
 from cross_reference import aggregate_all_species
-from utility import read_species_from_json
+from utility import read_species_from_json, prepare_data_cdf_ppf
 
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
@@ -82,6 +83,62 @@ def class_composition_bar_chart(properties_json_path: str, class_to_analyze: str
     plt.tight_layout()
     plt.show()
 
+
+def visualizing_cdf(properties_json_path: str, class_to_analyze: str) -> None:
+    result = prepare_data_cdf_ppf(properties_json_path, class_to_analyze)
+
+
+    if result is None:
+        print(f"ERROR: Data preparation failed for {class_to_analyze}")
+        return
+    species_names, sorted_image_counts = result
+
+    ecdf = False
+    if ecdf:
+        cdf_values = np.arange(1, len(sorted_image_counts) + 1) / len(sorted_image_counts)
+    else:
+        total_images = sum(sorted_image_counts)
+        cumulative_images = np.cumsum(sorted_image_counts) 
+        cdf_values = cumulative_images / total_images
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(sorted_image_counts, cdf_values, marker=".", linestyle="-")
+
+    # plt.plot(sorted_images, cdf_values, marker=".", linestyle="-", label="CDF")
+    # plt.xlabel(f"Number of Images in {class_to_analyze}")
+    # plt.ylabel("Cumulative Probability")
+    # plt.xticks(ticks=sorted_images, labels=species_names, rotation=90, fontsize=4)
+    plt.xlabel("Number of Images")
+    plt.ylabel("Cumulative Probability")
+    plt.title(f"Cumulative Distribution Function (CDF) of {class_to_analyze} Image Counts")
+    plt.grid(axis="x")
+    # plt.legend()
+    plt.show()
+
+
+def visualizing_ppf(properties_json_path: str, class_to_analyze: str) -> None:
+    result = prepare_data_cdf_ppf(properties_json_path, class_to_analyze)
+    if result is None:
+        print(f"ERROR: Data preparation failed for {class_to_analyze}")
+        return
+
+    species_names, sorted_image_counts = result
+
+    total_images = sum(sorted_image_counts)
+    cumulative_images = np.cumsum(sorted_image_counts) 
+    cdf_values = cumulative_images / total_images
+
+    plt.figure(figsize=(6, 12))
+    plt.plot(cdf_values, sorted_image_counts, marker='.', linestyle="-")
+    for x, y, species in zip(cdf_values, sorted_image_counts, species_names):
+        plt.hlines(y, xmin=0, xmax=x, colors="gray", linestyles="dashed", alpha=0.5)
+        # plt.text(x, y, species, fontsize=8, rotation=45, ha="right")
+    plt.xlabel("Cumulative Probability")
+    plt.yticks(ticks=sorted_image_counts, labels=species_names, fontsize=10)
+    plt.ylabel("Species")
+    plt.title(f"Percent Point Function (PPF) of {class_to_analyze} Image Counts")
+    plt.show()
+
 if __name__ == "__main__":
     OUTPUT_PATH = "output"
     FILE_1 = "output/iNat2017_Aves_Insecta_Full.json"
@@ -93,12 +150,14 @@ if __name__ == "__main__":
     species_set_1 = aggregate_all_species(dataset_1)
     species_set_2 = aggregate_all_species(dataset_2)
 
-    venn_diagram(
-        species_set_1,
-        "INaturalist 2017 Aves and Insecta",
-        species_set_2,
-        "Haute-Garonne Aves and Insecta",
-        "Species Overlap Between Datasets",
-    )
+    # venn_diagram(
+    #     species_set_1,
+    #     "INaturalist 2017 Aves and Insecta",
+    #     species_set_2,
+    #     "Haute-Garonne Aves and Insecta",
+    #     "Species Overlap Between Datasets",
+    # )
 
-    class_composition_bar_chart(PROPERTIES_FILE, "Aves")
+    # class_composition_bar_chart(PROPERTIES_FILE, "Aves")
+    # visualizing_cdf(PROPERTIES_FILE, "Aves")
+    visualizing_ppf(PROPERTIES_FILE, "Aves")

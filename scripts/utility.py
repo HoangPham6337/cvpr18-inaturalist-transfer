@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Dict, List
+from typing import Dict, Tuple, Optional
 
 SpeciesDict = Dict[str, list[str]]
 
@@ -100,3 +100,33 @@ def copy_matched_species(
                 print(f"{counter}/{total_matches} Missing source directory: {src_dir}")
 
             counter += 1
+
+
+def prepare_data_cdf_ppf(properties_json_path: str, class_to_analyze: str) -> Optional[Tuple[list[str], list[int]]]:
+    """Loads species image data from JSON dataset properties file, sorts by image count, and prepares data for CDF/PPF calculations.
+
+    Args:
+        properties_json_path: Path to the dataset properties JSON file.
+        class_to_analyze: The target class (e.g., 'Aves', 'Insecta').
+
+    Returns:
+        Optional[Tuple[List[str], List[int]]]: Sorted species names and corresponding image counts.
+    """
+    try:
+        with open(properties_json_path, "r", encoding="utf-8") as file:
+            species_data = json.load(file)
+    except FileNotFoundError:
+        print(f"File not found: {properties_json_path}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Not a valid JSON file: {e}")
+        return None
+
+    species_images_data: Dict[str, int] = species_data.get(class_to_analyze, {})
+    if not species_images_data:
+        print(f"ERROR: Class '{class_to_analyze}' not found or contains no data")
+        return None
+    sorted_species = sorted(species_images_data.items(), key=lambda x: x[1])
+    species_names, image_counts = zip(*sorted_species)
+
+    return list(species_names), list(image_counts)
