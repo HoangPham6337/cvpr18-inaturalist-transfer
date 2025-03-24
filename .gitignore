@@ -11,3 +11,6 @@ Model Structures/
 .venv*/
 .vscode/
 tensorflow*.whl
+*.h5
+*.onnx
+*/saved_model_tf*/
