@@ -60,6 +60,7 @@ def cross_reference(
             all_matched_dict[class_name] = list(class_matches)
             not_matches = (species_set_1 | species_set_2) - class_matches
 
+            # type: ignore
             output_data["class_comparison"][class_name] = {
                 "matched": sorted(class_matches),
                 "unmatched": sorted(not_matches),

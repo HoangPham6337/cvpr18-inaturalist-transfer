@@ -147,10 +147,10 @@ def get_dataset_properties(data_path: str, output_file_path: str) -> None:
 
 
 if __name__ == "__main__":
-    SPECIES_OUTPUT_PATH = "output/haute_garonne.json"
-    OUTPUT_PATH = "output/haute-garonne_properties.json"
+    SPECIES_OUTPUT_PATH = "output/haute_garonne_other.json"
+    OUTPUT_PATH = "output/haute-garonne_other_properties.json"
     DEFAULT_DATA_PATH: str = "."
-    CHECK = True
+    CHECK = False
 
     data_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_DATA_PATH
 
