@@ -6,7 +6,8 @@
 
 DATASET_NAME=haute_garonne_other
 DATASET_DIR=./data/
-MODEL_DIR=./checkpoints/${DATASET_NAME}
+# MODEL_DIR=./checkpoints/${DATASET_NAME}
+MODEL_DIR=./checkpoints/prunned_hg/
 CHECKPOINT_PATH=./checkpoints/inception/inception_v3_iNat_299.ckpt
 CHECKPOINT_EXCLUDE_SCOPES=Logits
 # fine-tune last layer

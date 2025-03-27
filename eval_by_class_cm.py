@@ -142,4 +142,7 @@ with tf.Graph().as_default():
     class_names = [species_data[str(i)] for i in range(NUM_CLASSES)]
     cm = confusion_matrix(y_true=all_labels, y_pred=all_predictions)
     print(cm)
-    plot_confusion_matrix(cm=cm, classes=class_names, title="Confusion Matrix")
+    # plot_confusion_matrix(cm=cm, classes=class_names, title="Confusion Matrix")
+
+
+
