@@ -41,7 +41,7 @@ CVPR2018
 
 **This project is based on the original work from:**
 - [Large Scale Fine-Grained Categorization and Domain-Specific Transfer Learning (CVPR 2018)](https://arxiv.org/abs/1806.06193)
-- [Original GitHub Repository](https://github.com/richardaecn/cvpr17-inaturalist-transfer)
+- [Original GitHub Repository](https://github.com/richardaecn/cvpr18-inaturalist-transfer)
 
 ## Dependencies and Installation
 Setting up TensorFlow 1.x with GPU acceleration is challenging due to outdated CUDA and cuDNN requirements. The original repository used Python 3.5.6, but due to dependency issues (pip, OpenSSL, etc.), Python 3.6.13 was found to be the most stable version.
@@ -106,14 +106,66 @@ python -c "import tensorflow as tf; print(tf.test.is_gpu_available())"
 ```
 
 ## Dataset Preparation
-### TODO: Automating Dataset Preparation
-Currently, dataset preparation requires manually setting paths in multiple scripts, which can be error-prone.  
-Planned Improvement: Introduce an orchestrator script to automate:
-- Running all preprocessing steps sequentially.
-- Handling dataset paths dynamically.
-- Reducing manual intervention.
+**This project uses a subset of iNaturelist 2017 combined with species from Haute-Garonne. The dataset must be manually downloaded and processed before training.**
 
-This project uses a subset of iNaturelist 2017 combined with species from Haute-Garonne. The dataset must be manually downloaded and processed before training.
+> This stage uses a newer version of Python in order to leverage their new features, please set up another virtual environment with Python 3.11+. Install all the necessary packages through `pip install requirements.txt`
+### Dataset Preparation using `dataset_orchestrator.py`
+Here are the stages in the pipeline:
+1. Crawl species from iNaturalist (Haute-Garonne region)
+2. Analyze dataset structure (class/species breakdown, image counts)
+3. Cross-reference species between iNat2017 and Haute-Garonne
+4. Copy matched species into a new dataset structure
+5. Create a full dataset with unmatched species grouped into 'Other'
+6. Re-analyze the new dataset for consistency
+7. Create a reduced dataset keeping only dominant species, rest into 'Other'
+8. Analyze the reduced dataset
+9. Generate train/validation manifests (5050 split by default unless specified in the config)
+10. Produce visualizations (bar charts, CDF, PPF, Venn diagrams)
+
+If any operations fails, a `FailedOperation` is rased and the script will:
+- Print a traceback
+- Call `cleanup()` to delete any partially written files
+- Exit gracefully
+
+#### Configuration file: `config.yaml`
+Paths
+```yaml
+paths:
+  src_dataset: "/run/media/train_val_images"  # iNat2017 root
+  inter_dataset: "./data/haute_garonne"                             # Species extracted from web crawl
+  dst_dataset: "./data/inat2017_other"                              # Full dataset with 'Other'
+  dst_dataset_small: "./data/haute_garonne_other"                   # Dominant-only dataset
+  matched_species_json: "./scripts/output/matched_species.json"    # Output of species comparison
+  web_crawl_output_json: "./scripts/output/haute_garonne.json"     # Output of web crawling
+  output_dir: "./scripts/output"                                    # Base folder for logs, plots, metadata
+```
+
+Web crawling parameters
+```yaml
+web_crawl:
+  total_pages: 104
+  base_url: "https://www.inaturalist.org/check_lists/32961-Haute-Garonne-Check-List?page="
+  delay_between_requests: 1
+```
+
+Train/Validation Split and Dominant Threshold
+```yaml
+train_val_split:
+  train_size: 0.8
+  random_state: 42
+  included_classes: ["Aves", "Insecta"]
+```
+
+Output:
+- `*_species.json`: class → list of species
+- `*_properties.json`: class/species → image count
+- `matched_species.json`: for dataset comparison
+- `plots/`: CDF, PPF, Venn diagrams, class bar charts
+- `train.txt, val.txt`: dataset splits, saves in the dataset directory
+
+### Manual way
+<details>
+<summary>Click me</summary>
 
 ### 1. Download and extract iNaturelist 2017
 [https://github.com/visipedia/inat_comp/tree/master/2017](https://github.com/visipedia/inat_comp/tree/master/2017)
@@ -189,8 +241,9 @@ This script will produce:
 - `dataset_species_labels.json`: a JSON file containing the species and their classification
 
 This script `stdout` output will be used for the metadata of `slim/datasets/dataset_factory_fgvc.py` later. **Take note of it!**
+</details>
 
-### 8. Convert the dataset to TFRecords
+### Convert the dataset to TFRecords
 
 ```bash
 python python convert_dataset.py --dataset_name=inat2017_other --num_shards=10

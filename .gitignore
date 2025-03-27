@@ -16,3 +16,4 @@ tensorflow*.whl
 *.onnx
 */saved_model_tf*/
 scripts/output/
+saved_model_tf*/
