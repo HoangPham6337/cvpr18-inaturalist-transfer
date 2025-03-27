@@ -1,6 +1,9 @@
 import json
 import os
 import shutil
+import yaml
+import glob
+from tqdm import tqdm
 from typing import Dict, Tuple, Optional
 
 SpeciesDict = Dict[str, list[str]]
@@ -20,6 +23,18 @@ CLASS_LIST = [
     "Amphibia",
     "Mammalia",
 ]
+
+class FailedOperation(Exception):
+    """Raise when an operation failed due to external reasons."""
+    def __init__(self, message, *args):
+        self.message = message
+        super(FailedOperation, self).__init__(*args)
+
+
+def load_config(config_path: str):
+    with open(config_path, "r") as file:
+        return yaml.safe_load(file)
+
 
 def write_species_to_json(file_output_path: str, species_data: SpeciesDict) -> None:
     """
@@ -77,29 +92,36 @@ def copy_matched_species(
     dst_dataset: str,
     matched_species: SpeciesDict,
     total_matches: int,
+    included_class: list[str]
 ) -> None:
-    counter = 1
+    species_counter = 0
     for class_name, species_set in matched_species.items():
-        for species_name in species_set:
+        if class_name not in included_class:
+            continue
+        for species_name in tqdm(species_set, f"Copy data in {class_name}"):
             src_dir = os.path.join(src_dataset, class_name, species_name)
             dst_dir = os.path.join(dst_dataset, class_name, species_name)
 
             if os.path.exists(src_dir):
+                species_counter += 1
                 os.makedirs(dst_dir, exist_ok=True)
 
+                # print(f"{species_counter}/{total_matches} Copied: {class_name}/{species_name}")
                 for item in os.listdir(src_dir):
                     src_file = os.path.join(src_dir, item)
                     dst_file = os.path.join(dst_dir, item)
                     if os.path.isfile(src_file):
                         if not os.path.isfile(dst_file):
                             shutil.copy2(src_file, dst_dir)
-                            print(f"{counter}/{total_matches} Copied: {class_name}/{species_name}/{item}")
+                            # print(f"{species_counter}/{total_matches} Copied: {class_name}/{species_name}/{item}")
                         else:
-                            print(f"{counter}/{total_matches} File exists - skipping: {class_name}/{species_name}/{item}")
+                            # print(f"{species_counter}/{total_matches} File exists - skipping: {class_name}/{species_name}/{item}")
+                            pass
             else:
-                print(f"{counter}/{total_matches} Missing source directory: {src_dir}")
+                print(f"{species_counter}/{total_matches} Missing source directory: {src_dir}")
 
-            counter += 1
+    if (total_matches != species_counter):
+        raise FailedOperation(f"Failed to copy all matches species {total_matches} != {species_counter}")
 
 
 def prepare_data_cdf_ppf(properties_json_path: str, class_to_analyze: str) -> Optional[Tuple[list[str], list[int]]]:
@@ -130,3 +152,21 @@ def prepare_data_cdf_ppf(properties_json_path: str, class_to_analyze: str) -> Op
     species_names, image_counts = zip(*sorted_species)
 
     return list(species_names), list(image_counts)
+
+
+def cleanup(config):
+    output_dir = config["paths"]["output_dir"]
+    inter_dataset = config["paths"]["inter_dataset"]
+    dst_dataset = config["paths"]["dst_dataset"]
+    dst_dataset_small = config["paths"]["dst_dataset_small"]
+    datasets = [inter_dataset, dst_dataset, dst_dataset_small]
+    files = glob.glob(f"{output_dir}/*")
+    for path in files:
+        print(f"Removing: {path}")
+        if os.path.isfile(path) or os.path.islink(path):
+            os.remove(path)
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+            
+    for dataset in datasets:
+        shutil.rmtree(dataset)
