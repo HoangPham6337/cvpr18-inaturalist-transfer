@@ -1,0 +1,18 @@
+paths:
+  src_dataset: "/run/media/tom-maverick/Dataset/train_val_images"
+  inter_dataset: "./data/haute_garonne"
+  dst_dataset: "./data/inat2017_other"
+  dst_dataset_small: "./data/haute_garonne_other"
+  matched_species_json: "./scripts/output/matched_species.json"
+  web_crawl_output_json: "./scripts/output/haute_garonne.json"
+  output_dir: "./scripts/output"
+
+web_crawl:
+  total_pages: 104
+  base_url: "https://www.inaturalist.org/check_lists/32961-Haute-Garonne-Check-List?page="
+  delay_between_requests: 1
+
+train_val_split:
+  train_size: 0.8
+  random_state: 42
+  included_classes: ["Aves", "Insecta"]
