@@ -1,18 +1,19 @@
-import traceback
 import os
-from dataset_builder.core.constants import CLASS_LIST
-from dataset_builder.core.utility import load_config, banner
-from dataset_builder.core.exceptions import PipelineError, FailedOperation
+import traceback
+
 from dataset_builder import (
-    run_web_crawl,
+    load_config,
     run_analyze_dataset,
     run_copy_matched_species,
     run_cross_reference,
     run_manifest_generator,
     run_visualization,
+    run_web_crawl,
+    validate_config,
 )
-
-config = load_config("./config.yaml")
+from dataset_builder.core import ConfigError, FailedOperation, PipelineError
+from dataset_builder.core.constants import CLASS_LIST
+from dataset_builder.core.utility import banner
 
 
 def run_stage(stage_name: str, func):
@@ -33,9 +34,18 @@ def run_stage(stage_name: str, func):
         raise FailedOperation(f"Unhandled exception in {stage_name}")
 
 
+try:
+    config = load_config("./config.yaml")
+    validate_config(config)
+except ConfigError as e:
+    print(e)
+    exit()
+
+
 # Global
 verbose = config["global"]["verbose"]
 target_classes = config["global"]["included_classes"]
+overwrite = config["global"]["overwrite"]
 
 # Paths
 src_dataset_path = config["paths"]["src_dataset"]
@@ -53,7 +63,6 @@ base_url = config["web_crawl"]["base_url"]
 total_pages = config["web_crawl"]["total_pages"]
 delay = config["web_crawl"]["delay_between_requests"]
 web_crawl_output_path = config["paths"]["web_crawl_output_json"]
-overwrite = config["web_crawl"]["overwrite"]
 
 # Train and validate split
 train_size = config["train_val_split"]["train_size"]
