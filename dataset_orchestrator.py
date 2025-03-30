@@ -14,6 +14,7 @@ from dataset_builder import (
 
 config = load_config("./config.yaml")
 
+
 def run_stage(stage_name: str, func):
     banner(stage_name)
 
@@ -140,8 +141,14 @@ try:
     run_stage(
         "Generating visualization",
         lambda: run_visualization(
-            src_dataset_path, dst_dataset_path, output_path, CLASS_LIST, target_classes, verbose
-        )
+            src_dataset_path,
+            dst_dataset_path,
+            output_path,
+            CLASS_LIST,
+            target_classes,
+            verbose,
+            overwrite,
+        ),
     )
 
 except FailedOperation as failedOp:

@@ -71,7 +71,11 @@ def venn_diagram(
     plt.close()
     # plt.show()
 
-def _class_composition_bar_chart(properties_json_path: str, class_to_analyze: str, save_path: Optional[str] = None, verbose: bool = False) -> None:
+def _class_composition_bar_chart(properties_json_path: str, class_to_analyze: str, save_path: Optional[str] = None, verbose: bool = False, overwrite: bool = False) -> None:
+    if save_path and os.path.isfile(save_path) and not overwrite:
+        log(f"{os.path.basename(save_path)} already exists, skipping", verbose, "INFO")
+        return
+
     with open(properties_json_path, "r", encoding='utf-8') as file:
         species_data = json.load(file)
 
@@ -113,7 +117,11 @@ def _class_composition_bar_chart(properties_json_path: str, class_to_analyze: st
 
 
 
-def _visualizing_ppf(properties_json_path: str, class_to_analyze: str, save_path: Optional[str] = None, verbose: bool = False) -> None:
+def _visualizing_ppf(properties_json_path: str, class_to_analyze: str, save_path: Optional[str] = None, verbose: bool = False, overwrite: bool = False) -> None:
+    if save_path and os.path.isfile(save_path) and not overwrite:
+        log(f"{os.path.basename(save_path)} already exists, skipping", verbose, "INFO")
+        return
+
     result = _prepare_data_cdf_ppf(properties_json_path, class_to_analyze)
     # Allow for failing
     if result is None:
@@ -161,7 +169,7 @@ def _visualizing_ppf(properties_json_path: str, class_to_analyze: str, save_path
         plt.show()
 
 
-def _visualize_class(properties_file: str, species_class: str, export_dir: str, dataset_name: str, verbose: bool = False) -> None:
+def _visualize_class(properties_file: str, species_class: str, export_dir: str, dataset_name: str, verbose: bool = False, overwrite: bool = False) -> None:
     export_dir = os.path.join(export_dir, dataset_name)
     base_filename = f"{dataset_name}_{species_class}"
     print(f"Processing {base_filename}")
@@ -171,7 +179,8 @@ def _visualize_class(properties_file: str, species_class: str, export_dir: str, 
         properties_file,
         species_class,
         save_path=os.path.join(export_dir, "composition", f"{base_filename}_bar.png"),
-        verbose=verbose
+        verbose=verbose,
+        overwrite=overwrite
     )
 
     # Generate the PPF visualization
@@ -179,11 +188,12 @@ def _visualize_class(properties_file: str, species_class: str, export_dir: str, 
         properties_file,
         species_class,
         save_path=os.path.join(export_dir, "ppf", f"{base_filename}_ppf.png"),
-        verbose=verbose
+        verbose=verbose,
+        overwrite=overwrite
     )
 
 
-def run_visualization(src_dataset_path: str, dst_dataset_path: str, output_dir: str, target_classes_src: List[str], target_classes_dst: List[str], verbose: bool = False):
+def run_visualization(src_dataset_path: str, dst_dataset_path: str, output_dir: str, target_classes_src: List[str], target_classes_dst: List[str], verbose: bool = False, overwrite: bool = False):
     src_dataset_name = src_dataset_path.split(os.sep)[-1]
     dst_dataset_name = dst_dataset_path.split(os.sep)[-1]
 
@@ -204,12 +214,12 @@ def run_visualization(src_dataset_path: str, dst_dataset_path: str, output_dir: 
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         pool.starmap(
             _visualize_class,
-            [(properties_file_1, species_class, export_dir, src_dataset_name, verbose) for species_class in target_classes_src]
+            [(properties_file_1, species_class, export_dir, src_dataset_name, verbose, overwrite) for species_class in target_classes_src]
         )
         
         pool.starmap(
             _visualize_class,
-            [(properties_file_2, species_class, export_dir, dst_dataset_name, verbose) for species_class in target_classes_dst]
+            [(properties_file_2, species_class, export_dir, dst_dataset_name, verbose, overwrite) for species_class in target_classes_dst]
         )
 
     # venn_diagram(

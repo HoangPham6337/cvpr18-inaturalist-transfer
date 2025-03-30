@@ -5,7 +5,7 @@ from dataset_builder.core.utility import _prepare_data_cdf_ppf
 from collections import defaultdict
 
 
-def identifying_dominant_species(properties_json_path: str, threshold: float, classes_to_analyze: List[str]) -> Optional[Dict[str, List[str]]]:
+def _identifying_dominant_species(properties_json_path: str, threshold: float, classes_to_analyze: List[str]) -> Optional[Dict[str, List[str]]]:
     species_data: Dict[str, list[str]] = defaultdict(list)
     for species_class in classes_to_analyze:
         result = _prepare_data_cdf_ppf(properties_json_path, species_class)

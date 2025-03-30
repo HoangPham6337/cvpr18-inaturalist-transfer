@@ -3,18 +3,18 @@ import json
 from tqdm import tqdm
 from typing import Dict, List, Tuple, Optional, Set
 from dataset_builder.core.utility import save_manifest_parquet
-from dataset_builder.manifest.identifying_dominant_species import identifying_dominant_species
+from dataset_builder.manifest.identifying_dominant_species import _identifying_dominant_species
 from dataset_builder.core.exceptions import FailedOperation
 from sklearn.model_selection import train_test_split
 
 
-def save_data_manifest(file_path: str, data: List[Tuple[str, int]]):
+def _save_data_manifest(file_path: str, data: List[Tuple[str, int]]):
     with open(file_path, "w") as file:
         for img_path, species_id in data:
             file.write(f"{img_path}: {species_id}\n")
 
 
-def collect_images_by_dominance(
+def _collect_images_by_dominance(
     dataset_path: str,
     class_name: str,
     dominant_species: Optional[Dict[str, List[str]]],
@@ -59,7 +59,7 @@ def collect_images_by_dominance(
     return current_id
 
 
-def write_species_lists(
+def _write_species_lists(
     base_output_path: str,
     image_list: List[Tuple[str, int]],
     species_dict: Dict[int, str],
@@ -99,7 +99,7 @@ def run_manifest_generator(
 ):
     os.makedirs(output_dir, exist_ok=True)
 
-    dominant_species = identifying_dominant_species(dataset_properties_path, threshold, target_classes)
+    dominant_species = _identifying_dominant_species(dataset_properties_path, threshold, target_classes)
 
     species_to_id: Dict[str, int] = {}
     species_dict: Dict[int, str] = {}
@@ -111,7 +111,7 @@ def run_manifest_generator(
         if not os.path.isdir(class_path) or class_name == "species_lists":
             continue
 
-        current_id = collect_images_by_dominance(
+        current_id = _collect_images_by_dominance(
             class_path,
             class_name,
             dominant_species,
@@ -120,11 +120,12 @@ def run_manifest_generator(
             image_list,
             current_id,
         )
+    species_dict = dict(sorted(species_dict.items()))
 
     save_manifest_parquet(image_list, os.path.join(output_dir, "dataset_manifest.parquet"))
 
     with open(os.path.join(output_dir, "dominant_labels.json"), "w", encoding="utf-8") as file:
-        json.dump(species_dict, file, indent=2)
+        json.dump(species_dict, file, indent=4)
 
     train_data, val_data = train_test_split(
         image_list,
@@ -141,7 +142,7 @@ def run_manifest_generator(
     save_manifest_parquet(train_data, os.path.join(output_dir, "train.parquet"))
     save_manifest_parquet(train_data, os.path.join(output_dir, "val.parquet"))
 
-    write_species_lists(output_dir, image_list, species_dict)
+    _write_species_lists(output_dir, image_list, species_dict)
 
     print(f"Dominant manifest created in: {output_dir}")
     print(f"Total species (with 'Other'): {len(species_dict)}")
