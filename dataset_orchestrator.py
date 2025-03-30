@@ -169,7 +169,22 @@ try:
             src_dataset_name,
             dst_dataset_name,
             "Species Overlap Between Datasets",
+            CLASS_LIST,
             os.path.join(output_path, f"{src_dataset_name}_vs_{dst_dataset_name}_venn.png"),
+            verbose,
+            overwrite
+        )
+    )
+    run_stage(
+        "Generating Venn diagram",
+        lambda: venn_diagram(
+            src_dataset_json,
+            web_crawl_output_path,
+            src_dataset_name,
+            dst_dataset_name,
+            "Species Overlap Between Datasets",
+            target_classes,
+            os.path.join(output_path, f"{src_dataset_name}_vs_{dst_dataset_name}_venn_target.png"),
             verbose,
             overwrite
         )

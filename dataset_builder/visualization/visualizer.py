@@ -48,6 +48,7 @@ def venn_diagram(
     set_1_name: str,
     set_2_name: str,
     diagram_name: str,
+    target_classes: List[str] = [],
     save_path: Optional[str] = None,
     verbose: bool = False,
     overwrite: bool = False
@@ -66,16 +67,17 @@ def venn_diagram(
         set_1_name: Label for the first dataset in the Venn diagram.
         set_2_name: Label for the second dataset in the Venn diagram.
         diagram_name: Title for the Venn diagram.
+        target_classes: List of species class to include. Defaults to []
         save_path: Path to save the diagram image. If not provided, the diagram is shown.
     """
     if save_path and os.path.isfile(save_path) and not overwrite:
-        log(f"{save_path} already exists, skipping creating venn_diagram", verbose)
+        log(f"{save_path} already exists, skipping creating venn_diagram", True)
         return
     dataset_1 = read_species_from_json(dataset_1_path)
     dataset_2 = read_species_from_json(dataset_2_path)
 
-    set_1 = _aggregate_all_species(dataset_1)
-    set_2 = _aggregate_all_species(dataset_2)
+    set_1 = _aggregate_all_species(dataset_1, target_classes)
+    set_2 = _aggregate_all_species(dataset_2, target_classes)
 
     only_dataset_1 = len(set_1 - set_2)
     only_dataset_2 = len(set_2 - set_1)

@@ -3,7 +3,7 @@ from typing import List, Set, Tuple
 from dataset_builder.core.utility import SpeciesDict
 
 
-def _aggregate_all_species(species_data: SpeciesDict) -> Set[str]:
+def _aggregate_all_species(species_data: SpeciesDict, target_classes: List[str] = []) -> Set[str]:
     """
     Aggregates all species from the provided species data into a set of unique species names.
 
@@ -15,7 +15,9 @@ def _aggregate_all_species(species_data: SpeciesDict) -> Set[str]:
         Set[str]: A set containing all unique species names from the input species data.
     """
     species_set = set()
-    for species_list in species_data.values():
+    for species_class, species_list in species_data.items():
+        if species_class in target_classes:
+            continue
         species_set.update(species_list)
     return species_set
 
