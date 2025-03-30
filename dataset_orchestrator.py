@@ -10,6 +10,7 @@ from dataset_builder import (
     run_visualization,
     run_web_crawl,
     validate_config,
+    venn_diagram
 )
 from dataset_builder.core import ConfigError, FailedOperation, PipelineError
 from dataset_builder.core.constants import CLASS_LIST
@@ -56,6 +57,7 @@ output_path = config["paths"]["output_dir"]
 matched_species_file = f"matched_species_{src_dataset_name}_{dst_dataset_name}.json"
 matched_species_path = os.path.join(output_path, matched_species_file)
 src_dataset_json = os.path.join(output_path, f"{src_dataset_name}_species.json")
+dst_dataset_json = os.path.join(output_path, f"{dst_dataset_name}_species.json")
 dst_properties_path = os.path.join(output_path, f"{dst_dataset_name}_composition.json")
 
 # Web Crawl
@@ -158,6 +160,19 @@ try:
             verbose,
             overwrite,
         ),
+    )
+    run_stage(
+        "Generating Venn diagram",
+        lambda: venn_diagram(
+            src_dataset_json,
+            web_crawl_output_path,
+            src_dataset_name,
+            dst_dataset_name,
+            "Species Overlap Between Datasets",
+            os.path.join(output_path, f"{src_dataset_name}_vs_{dst_dataset_name}_venn.png"),
+            verbose,
+            overwrite
+        )
     )
 
 except FailedOperation as failedOp:
