@@ -99,8 +99,6 @@ Or
 pip install tensorflow_gpu-1.11.0-cp36-cp36m-manylinux1_x86_64.whl 
 ```
 
-
-
 ### 7. Verify if TensorFlow has been installed successfully
 
 ```bash
@@ -110,7 +108,6 @@ python -c "import tensorflow as tf; print(tf.test.is_gpu_available())"
 ## Dataset Preparation
 **This project uses a subset of iNaturelist 2017 combined with species from Haute-Garonne. The dataset must be manually downloaded and processed before training.**
 
-> This stage uses a newer version of Python in order to leverage their new features, please set up another virtual environment with Python 3.11+. Install all the necessary packages through `pip install requirements.txt`
 ### Dataset Preparation
 We provide a modular and automated pipeline using the dataset_builder package. Configuration is handled via `config.yaml`.
 
@@ -163,6 +160,7 @@ Output:
 ### Manual way
 <details>
 <summary>Click me</summary>
+You will need to switch to branch `legacy-manual-branch` for this.
 
 ### 1. Download and extract iNaturelist 2017
 [https://github.com/visipedia/inat_comp/tree/master/2017](https://github.com/visipedia/inat_comp/tree/master/2017)
