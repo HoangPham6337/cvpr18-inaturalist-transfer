@@ -1,0 +1,148 @@
+import os
+import json
+from tqdm import tqdm
+from typing import Dict, List, Tuple, Optional, Set
+from dataset_builder.core.utility import save_manifest_parquet
+from dataset_builder.manifest.identifying_dominant_species import identifying_dominant_species
+from dataset_builder.core.exceptions import FailedOperation
+from sklearn.model_selection import train_test_split
+
+
+def save_data_manifest(file_path: str, data: List[Tuple[str, int]]):
+    with open(file_path, "w") as file:
+        for img_path, species_id in data:
+            file.write(f"{img_path}: {species_id}\n")
+
+
+def collect_images_by_dominance(
+    dataset_path: str,
+    class_name: str,
+    dominant_species: Optional[Dict[str, List[str]]],
+    species_to_id: Dict[str, int],
+    species_dict: Dict[int, str],
+    image_list: List[Tuple[str, int]],
+    current_id: int,
+) -> int:
+    dominant_set: Optional[Set[str]] = set(dominant_species.get(class_name, [])) if dominant_species else None
+
+    if dominant_set is None:
+        raise FailedOperation("No dominance species detected, double check the dataset.")
+
+    # First pass: dominant species
+    for species in sorted(os.listdir(dataset_path)):
+        species_path = os.path.join(dataset_path, species)
+        if not os.path.isdir(species_path):
+            continue
+        if species in dominant_set:
+            label = species_to_id.setdefault(species, current_id)
+            if label == current_id:
+                species_dict[current_id] = species
+                current_id += 1
+            for img_file in os.listdir(species_path):
+                img_path = os.path.join(species_path, img_file)
+                image_list.append((img_path, label))
+
+    # Second pass: non-dominant species → "Other"
+    other_label = sum(len(species_list) for species_list in dominant_species.values())  # type: ignore
+    for species in os.listdir(dataset_path):
+        species_path = os.path.join(dataset_path, species)
+        if not os.path.isdir(species_path):
+            continue
+        if species not in dominant_set:
+            for img_file in os.listdir(species_path):
+                img_path = os.path.join(species_path, img_file)
+                image_list.append((img_path, other_label))
+
+    if "Other" not in species_dict.values():
+        species_dict[other_label] = "Other"
+
+    return current_id
+
+
+def write_species_lists(
+    base_output_path: str,
+    image_list: List[Tuple[str, int]],
+    species_dict: Dict[int, str],
+):
+    species_list_dir = os.path.join(base_output_path, "species_lists")
+    os.makedirs(species_list_dir, exist_ok=True)
+
+    species_group: Dict[str, List[Tuple[str, int]]] = {}
+    for img_path, label in image_list:
+        species = species_dict[label]
+        if species not in species_group:
+            species_group[species] = []
+        species_group[species].append((img_path, label))
+
+
+    for species, tuple_list in tqdm(species_group.items(), f"Writing species specific manifest to {species_list_dir}"):
+        # path_parts = lines[0].split(os.sep)
+        class_name = tuple_list[0][0].split(os.sep)[-3]
+        species_dir = os.path.join(species_list_dir, class_name, species)
+        os.makedirs(species_dir, exist_ok=True)
+        file_name = os.path.join(species_dir, "images.parquet")
+
+        save_manifest_parquet(tuple_list, file_name)
+
+        # with open(os.path.join(species_dir, "images.txt"), "w") as file:
+        #     file.write("\n".join(tuple_list))
+
+
+def run_manifest_generator(
+    data_dir: str,
+    output_dir: str,
+    dataset_properties_path: str,
+    train_size: float,
+    random_state: int,
+    target_classes: List[str],
+    threshold: float
+):
+    os.makedirs(output_dir, exist_ok=True)
+
+    dominant_species = identifying_dominant_species(dataset_properties_path, threshold, target_classes)
+
+    species_to_id: Dict[str, int] = {}
+    species_dict: Dict[int, str] = {}
+    image_list: List[Tuple[str, int]] = []
+    current_id = 0
+
+    for class_name in os.listdir(data_dir):
+        class_path = os.path.join(data_dir, class_name)
+        if not os.path.isdir(class_path) or class_name == "species_lists":
+            continue
+
+        current_id = collect_images_by_dominance(
+            class_path,
+            class_name,
+            dominant_species,
+            species_to_id,
+            species_dict,
+            image_list,
+            current_id,
+        )
+
+    save_manifest_parquet(image_list, os.path.join(output_dir, "dataset_manifest.parquet"))
+
+    with open(os.path.join(output_dir, "dominant_labels.json"), "w", encoding="utf-8") as file:
+        json.dump(species_dict, file, indent=2)
+
+    train_data, val_data = train_test_split(
+        image_list,
+        train_size=train_size,
+        random_state=random_state,
+        stratify=[label for _, label in image_list],
+    )
+
+    with open(
+        os.path.join(output_dir, "dataset_species_labels.json"), "w", encoding="utf-8"
+    ) as file:
+        json.dump(species_dict, file, indent=4)
+
+    save_manifest_parquet(train_data, os.path.join(output_dir, "train.parquet"))
+    save_manifest_parquet(train_data, os.path.join(output_dir, "val.parquet"))
+
+    write_species_lists(output_dir, image_list, species_dict)
+
+    print(f"Dominant manifest created in: {output_dir}")
+    print(f"Total species (with 'Other'): {len(species_dict)}")
+    print(f"Total Images: {len(image_list)} | Train: {len(train_data)} | Val: {len(val_data)}")
