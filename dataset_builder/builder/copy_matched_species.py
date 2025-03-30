@@ -13,6 +13,22 @@ def run_copy_matched_species(
     target_classes: List[str],
     verbose: bool = False,
 ) -> None:
+    """
+    Copies species data from a source dataset to a destination dataset based on 
+    a matched species JSON file. Only species that are present in the matched 
+    species JSON and belong to the specified target classes will be copied.
+
+    Args:
+        src_dataset: Path to the source dataset directory containing species data.
+        dst_dataset: Path to the destination dataset directory where species data will be copied.
+        matched_species_json: Path to the JSON file containing matched species information.
+        target_classes: List of species classes to be copied from the matched species.
+        verbose: Whether to print detailed information about the copying process. Defaults to False.
+
+    Raises:
+        FailedOperation: If the matched species JSON file cannot be found, is in an invalid format, 
+                         or if not all species are successfully copied.
+    """
     if not os.path.isfile(matched_species_json):
         raise FailedOperation("Cannot find matched species JSON. Cannot proceed with copying matched species")
 
@@ -39,7 +55,6 @@ def run_copy_matched_species(
                 species_copied += 1
                 os.makedirs(dst_dir, exist_ok=True)
 
-                # print(f"{species_counter}/{total_matches} Copied: {class_name}/{species_name}")
                 for item in os.listdir(src_dir):
                     src_file = os.path.join(src_dir, item)
                     dst_file = os.path.join(dst_dir, item)

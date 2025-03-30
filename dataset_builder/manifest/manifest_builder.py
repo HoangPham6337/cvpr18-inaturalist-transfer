@@ -1,14 +1,27 @@
-import os
 import json
-from tqdm import tqdm
-from typing import Dict, List, Tuple, Optional, Set
-from dataset_builder.core.utility import save_manifest_parquet
-from dataset_builder.manifest.identifying_dominant_species import _identifying_dominant_species
-from dataset_builder.core.exceptions import FailedOperation
+import os
+from typing import Dict, List, Optional, Set, Tuple
+
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
+
+from dataset_builder.core.exceptions import FailedOperation
+from dataset_builder.core.utility import save_manifest_parquet
+from dataset_builder.manifest.identifying_dominant_species import (
+    _identifying_dominant_species,
+)
 
 
 def _save_data_manifest(file_path: str, data: List[Tuple[str, int]]):
+    """
+    Saves a list of image paths and species IDs to a file.
+
+    Each image path is written alongside its corresponding species ID.
+
+    Args:
+        file_path: The file path where the data will be saved.
+        data: A list of tuples where each tuple contains an image path and its corresponding species ID.
+    """
     with open(file_path, "w") as file:
         for img_path, species_id in data:
             file.write(f"{img_path}: {species_id}\n")
@@ -23,6 +36,27 @@ def _collect_images_by_dominance(
     image_list: List[Tuple[str, int]],
     current_id: int,
 ) -> int:
+    """
+    Collects image paths for dominant and non-dominant species from the dataset.
+
+    First, it processes dominant species, assigning unique species IDs. Then, it 
+    processes non-dominant species, assigning them to the "Other" category.
+
+    Args:
+        dataset_path: The path to the dataset containing species folders.
+        class_name: The species class to process.
+        dominant_species: A dictionary of dominant species by class.
+        species_to_id: A mapping of species names to unique IDs.
+        species_dict: A mapping of species IDs to species names.
+        image_list: The list to accumulate image paths and their corresponding species IDs.
+        current_id: The current species ID to assign.
+
+    Returns:
+        int: The updated species ID after processing the species.
+
+    Raises:
+        FailedOperation: If no dominant species are found for the given class.
+    """
     dominant_set: Optional[Set[str]] = set(dominant_species.get(class_name, [])) if dominant_species else None
 
     if dominant_set is None:
@@ -64,6 +98,18 @@ def _write_species_lists(
     image_list: List[Tuple[str, int]],
     species_dict: Dict[int, str],
 ):
+    """
+    Writes species-specific image lists to the specified output path.
+
+    Groups the images by species, creates directories for each species, and saves 
+    the list of image paths to a Parquet file for each species.
+
+    Args:
+        base_output_path (str): The base directory where species lists will be saved.
+        image_list (List[Tuple[str, int]]): A list of image paths and their corresponding species IDs.
+        species_dict (Dict[int, str]): A dictionary mapping species IDs to species names.
+    """
+
     species_list_dir = os.path.join(base_output_path, "species_lists")
     os.makedirs(species_list_dir, exist_ok=True)
 
@@ -76,7 +122,6 @@ def _write_species_lists(
 
 
     for species, tuple_list in tqdm(species_group.items(), f"Writing species specific manifest to {species_list_dir}"):
-        # path_parts = lines[0].split(os.sep)
         class_name = tuple_list[0][0].split(os.sep)[-3]
         species_dir = os.path.join(species_list_dir, class_name, species)
         os.makedirs(species_dir, exist_ok=True)
@@ -97,6 +142,23 @@ def run_manifest_generator(
     target_classes: List[str],
     threshold: float
 ):
+    """
+    Generates a dataset manifest of image paths and labels. Splits the dataset 
+    into training and validation sets based on the dominant threshold and saves
+    species data to Parquet and JSON files.
+
+    Args:
+        data_dir: The directory containing species class folders.
+        output_dir: The directory to save the output manifests and species data.
+        dataset_properties_path: Path to the properties file containing dataset information.
+        train_size: The proportion of the dataset to use for training.
+        random_state: Random seed for reproducibility of train/test split.
+        target_classes: List of species classes to include in the manifest.
+        threshold: The threshold for identifying dominant species based on image count.
+
+    Raises:
+        FailedOperation: If there are issues processing the dataset or saving the manifest.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     dominant_species = _identifying_dominant_species(dataset_properties_path, threshold, target_classes)

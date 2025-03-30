@@ -2,7 +2,7 @@ import os
 from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 from dataset_builder.core.log import log
-from dataset_builder.core.constants import CLASS_LIST, IGNORE_DIRS
+from dataset_builder.core.constants import IGNORE_DIRS
 from dataset_builder.core.utility import (
     read_species_from_json,
     SpeciesDict,
@@ -92,14 +92,7 @@ def _filter_species_from_json(
     data = read_species_from_json(json_file_path)
 
     if not isinstance(data, dict):
-        raise ValueError(
-            f"Invalid JSON structure in {json_file_path}. It should be Dict[str, List[str]]"
-        )
-
-    # filtered_data: SpeciesDict = {
-    #     key: data[key] for key in target_classes if key in data
-    # }
-
+        raise ValueError(f"Invalid JSON structure in {json_file_path}. It should be Dict[str, List[str]]")
 
     filtered_data: SpeciesDict = {
         class_name: species_list
@@ -118,10 +111,7 @@ def _filter_species_from_json(
     log(f"Extracted from {len(filtered_data.keys())}: ", verbose)
 
     for species_class, species in filtered_data.items():
-        log(
-            f"Extracted {len(species)} species from {species_class}",
-            verbose=verbose,
-        )
+        log(f"Extracted {len(species)} species from {species_class}", verbose=verbose)
     log(str(list(filtered_data.keys())), verbose=verbose)
 
     return filtered_data

@@ -1,10 +1,19 @@
-import os
-import json
 from typing import List, Set, Tuple
+
 from dataset_builder.core.utility import SpeciesDict
 
 
 def _aggregate_all_species(species_data: SpeciesDict) -> Set[str]:
+    """
+    Aggregates all species from the provided species data into a set of unique species names.
+
+    Args:
+        species_data (SpeciesDict): A dictionary where keys are species classes (str)
+            and values are lists of species names (str).
+
+    Returns:
+        Set[str]: A set containing all unique species names from the input species data.
+    """
     species_set = set()
     for species_list in species_data.values():
         species_set.update(species_list)
@@ -54,7 +63,8 @@ def cross_reference_set(
 
     species_set_1 = _aggregate_all_species(species_dict_1)
     species_set_2 = _aggregate_all_species(species_dict_2)
-    matches, unmatched = _find_set_matches_differences(species_set_1, species_set_2)
+    matches, unmatched = _find_set_matches_differences(
+        species_set_1, species_set_2)
     # Union class to cover all unique classes from both dicts
     all_classes = set(species_dict_1) | set(species_dict_2)
     matched_dict: SpeciesDict = {}
@@ -63,7 +73,6 @@ def cross_reference_set(
         "total_unmatched": len(unmatched),
         "class_comparison": {},
     }
-
 
     for class_name in all_classes:
         if class_name not in target_classes:
@@ -79,15 +88,5 @@ def cross_reference_set(
             "matched": sorted(matched_species),
             "unmatched": sorted(not_matched_species),
         }
-
-
-    #     json_file_path = os.path.join(output_path, "cross_reference.json")
-    #     with open(json_file_path, "w", encoding="utf-8") as file:
-    #         json.dump(report, file, indent=2)
-
-    #     print(f"Cross-reference result saved to {output_path}/{json_file_path}")
-
-    # except IOError as e:
-    #     print(f"Failed to write to file: {e}")
 
     return matched_dict, len(matches)

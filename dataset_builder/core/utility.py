@@ -1,32 +1,59 @@
 import json
 import os
 import shutil
-import yaml  # type: ignore
-import pandas as pd
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
+import yaml  # type: ignore
 from tqdm import tqdm  # type: ignore
+
 from dataset_builder.core.log import log
-from typing import Dict, Tuple, Optional, List, Any
 
 SpeciesDict = Dict[str, List[str]]
 
 
-def load_config(config_path: str):
-    with open(config_path, "r") as file:
-        return yaml.safe_load(file)
-
-
 def banner(title: str):
+    """
+    Prints a banner with a title, surrounded by '#' characters.
+
+    Args:
+        title (str): The title to display in the banner.
+    """
     line = "#" * 60
     print(f"{line}\n{title.upper()}\n{line}")
 
+
 def _is_json_file(json_path: str) -> bool:
-    if os.path.isfile(json_path) and os.path.basename(json_path).lower().endswith(".json"):
+    """
+    Checks if the given file path points to a valid JSON file.
+
+    Args:
+        json_path (str): The file path to check.
+
+    Returns:
+        bool: True if the file is a JSON file, False otherwise.
+    """
+    if os.path.isfile(json_path) and os.path.basename(json_path).lower().endswith(
+        ".json"
+    ):
         return True
     return False
 
 
 def _is_species_dict(obj: Any) -> bool:
+    """
+    Checks if the given object is a valid species dictionary.
+
+    The object must be a dictionary where keys are strings (species classes) 
+    and values are lists of species names (strings).
+
+    Args:
+        obj (Any): The object to check.
+
+    Returns:
+        bool: True if the object is a valid species dictionary, False otherwise.
+    """
     if not isinstance(obj, dict):
         return False
     for k, v in obj.items():
@@ -36,17 +63,11 @@ def _is_species_dict(obj: Any) -> bool:
             return False
     return True
 
-# def aggregate_all_species(species_data: SpeciesDict) -> Set[str]:
-#     species_set = set()
-#     for species_list in species_data.values():
-#         species_set.update(species_list)
-#     return species_set
-
 
 def save_manifest_parquet(manifest: List[Tuple[str, int]], path: str):
     """
     Saves a dataset manifest to Parquet format.
-    
+
     Args:
         manifest: List of (image_path, label_id)
         path: Output file path (.parquet)
@@ -79,7 +100,7 @@ def write_data_to_json(file_output_path: str, display_name: str, species_data) -
 
         with open(file_output_path, "w", encoding="utf-8") as f:
             json.dump(species_data, f, indent=4)
-        
+
         print(f"{display_name} → {file_output_path}")
     except IOError as e:
         log(f"Error writing to file {file_output_path}: {e}", True, "ERROR")
@@ -91,7 +112,7 @@ def read_species_from_json(file_input_path: str) -> SpeciesDict:
 
     Args:
         file_output_path: The path to the JSON file.
-    
+
     Returns:
         SpeciesDict (Dict[str, List[str]]): Dictionary containing species as keys and their species as values.
 
@@ -115,7 +136,9 @@ def read_species_from_json(file_input_path: str) -> SpeciesDict:
         return {}
 
 
-def _prepare_data_cdf_ppf(properties_json_path: str, class_to_analyze: str) -> Optional[Tuple[List[str], List[int]]]:
+def _prepare_data_cdf_ppf(
+    properties_json_path: str, class_to_analyze: str
+) -> Optional[Tuple[List[str], List[int]]]:
     """Loads species image data from JSON dataset properties file, sorts by image count, and prepares data for CDF/PPF calculations.
 
     Args:
@@ -139,12 +162,20 @@ def _prepare_data_cdf_ppf(properties_json_path: str, class_to_analyze: str) -> O
     if not species_images_data:
         print(f"ERROR: Class '{class_to_analyze}' not found or contains no data")
         return None
-    sorted_species = sorted(species_images_data.items(), key=lambda x: x[1], reverse=True)
+    sorted_species = sorted(
+        species_images_data.items(), key=lambda x: x[1], reverse=True
+    )
     species_names, image_counts = zip(*sorted_species)
 
     return list(species_names), list(image_counts)
 
 
 def cleanup(**remove_paths):
+    """
+    Removes the specified directories and their contents.
+
+    Args:
+        **remove_paths: One or more paths to directories that should be removed.
+    """
     for path in remove_paths:
         shutil.rmtree(path)

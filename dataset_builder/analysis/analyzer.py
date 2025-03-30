@@ -1,16 +1,29 @@
 import os
 from typing import List
+
 from dataset_builder.analysis.scanner import (
+    _filter_species_from_json,
     _scan_image_counts,
     _scan_species_list,
-    _filter_species_from_json,
 )
-from dataset_builder.core.utility import write_data_to_json, _is_json_file, SpeciesDict
+from dataset_builder.core.utility import SpeciesDict, _is_json_file, write_data_to_json
 
 
 def _summarize_species_data(
     species_dict: SpeciesDict, source: str, verbose: bool = False
 ):
+    """
+    Summarizes the species data by printing the number of species per class
+    and the total number of species extracted from the given source.
+
+    Args:
+        species_dict: A dictionary where the keys are species
+            classes, and the values are lists of species.
+        source (str): A string representing the source from which the species
+            data was extracted.
+        verbose (bool, optional): A flag to print detailed information about
+            the species count per class. Defaults to False.
+    """
     total_species = sum(len(species) for species in species_dict.values())
     print(f"Extracted from: {source}")
     if verbose:

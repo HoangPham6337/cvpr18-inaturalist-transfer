@@ -102,6 +102,26 @@ def run_web_crawl(
     overwrite: bool = False,
     verbose: bool = False,
 ):
+    """
+    Crawls iNaturelist site to scrape species data and saves the results to a JSON file.
+
+    This function scrapes species data from multiple pages of a website, 
+    aggregates the data by taxonomic class, and saves it as a JSON file. 
+    If the output file already exists and `overwrite` is False, the crawl 
+    process will be skipped. Otherwise, the function will fetch the data 
+    and store it at the specified location.
+
+    Args:
+        base_url: The base URL of the website from which to scrape species data.
+        output_path: The file path where the scraped species data will be saved as JSON.
+        delay: The delay (in seconds) between requests to avoid overwhelming the server. Defaults to 1.
+        total_pages : The number of pages to crawl. Defaults to 1.
+        overwrite: Flag to indicate whether to overwrite the existing output file. Defaults to False.
+        verbose: Whether to print detailed information during the web crawl process. Defaults to False.
+
+    Raises:
+        FailedOperation: If an unexpected error occurs during the web crawling process.
+    """
     if os.path.isfile(output_path) and not overwrite:
         print(f"{output_path} already exists, skipping web crawl.")
         return

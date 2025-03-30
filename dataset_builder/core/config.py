@@ -1,16 +1,46 @@
 import os
 import re
+from typing import Any
+
 import yaml
-from urllib.parse import urlparse
+
 from dataset_builder.core.exceptions import ConfigError
 from dataset_builder.core.utility import log
 
-def load_config(config_path: str):
+
+def load_config(config_path: str) -> Any:
+    """
+    Loads a YAML configuration file and returns its contents.
+
+    Args:
+        config_path: The file path to the YAML configuration file to be loaded.
+
+    Returns:
+        output: The parsed contents of the YAML configuration file.
+
+    Raises:
+        FileNotFoundError: If the specified configuration file does not exist.
+        yaml.YAMLError: If the YAML file is invalid or cannot be parsed.
+    """
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
 
 def validate_config(config):
+    """
+    Validates the provided configuration dictionary.
+
+    Checks for the presence and correctness of required sections like 'global', 
+    'paths', 'web_crawl', and 'train_val_split', ensuring that values are of 
+    the correct type and format. Creates missing directories and raises errors 
+    for any invalid or missing configurations.
+
+    Args:
+        config: The configuration dictionary to validate. Parse from `load_config()`
+
+    Raises:
+        ConfigError: If any required section or value in the config is missing or invalid.
+    """
     # Validate global
     if "global" not in config:
         raise ConfigError("Missing 'global' section in config")
@@ -25,7 +55,7 @@ def validate_config(config):
 
 
     # Validate path
-    if "path" not in config:
+    if "paths" not in config:
         raise ConfigError("Missing 'paths' section in config")
     
     src_dataset_path = config["paths"].get("src_dataset", None)
@@ -36,7 +66,7 @@ def validate_config(config):
     if not all([src_dataset_path, dst_dataset_path, output_path, web_crawl_output_path]):
         raise ConfigError("Missing one or more required paths in 'paths' section.")
     
-    for path in [src_dataset_path, dst_dataset_path, output_path, web_crawl_output_path]:
+    for path in [dst_dataset_path, output_path]:
         if not os.path.isdir(path):
             log(f"Path {path} does not exist. It will be created.", True, "INFO")
             os.makedirs(path, exist_ok=True)
