@@ -59,47 +59,14 @@ Setting up TensorFlow 1.x with GPU acceleration is challenging due to outdated C
 
 Follow their guide here: [https://www.anaconda.com/docs/getting-started/anaconda/install](https://www.anaconda.com/docs/getting-started/anaconda/install)
 
-### 2. Create a Conda virtual environment
+### 2. Set up Conda virtual environment
 
 ```bash
-conda create --name cvpr18 python=3.6.13 -y
+conda env create -f conda.yaml
 conda activate cvpr18
 ```
 
-### 3. Install Nvidia packages
-
-```bash
-conda install cudatoolkit=9.0 cudnn==7.6.5 cuda-nvcc==11.3.58 -y
-```
-
-### 4. Create a virtual python environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-### 5. Install required dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 6. Install TensorFlow 1.11
-
-You can either install through `pip` or download the prebuilt wheel on [pypi.org](https://pypi.org/project/tensorflow-gpu/1.11.0/#files). Make sure you download the `cp36-arch.whl` where `arch` is your OS of choice.
-
-If no GPU is available, you can install a tensorflow build that is optimized for new CPU instruction here: [lakshayg/tensorflow-build](https://github.com/lakshayg/tensorflow-build)
-
-```bash
-pip install tensorflow-gpu==1.11
-```
-Or
-```bash
-pip install tensorflow_gpu-1.11.0-cp36-cp36m-manylinux1_x86_64.whl 
-```
-
-### 7. Verify if TensorFlow has been installed successfully
+### 3. Verify if TensorFlow has been installed successfully
 
 ```bash
 python -c "import tensorflow as tf; print(tf.test.is_gpu_available())"
@@ -109,7 +76,7 @@ python -c "import tensorflow as tf; print(tf.test.is_gpu_available())"
 **This project uses a subset of iNaturelist 2017 combined with species from Haute-Garonne. The dataset must be manually downloaded and processed before training.**
 
 ### Dataset Preparation
-We provide a modular and automated pipeline using the dataset_builder package. Configuration is handled via `config.yaml`.
+We provide a modular and automated pipeline using the `dataset_builder` package. Configuration is handled via `config.yaml`.
 
 ### Steps (automated by `dataset_orchestrator.py`)
 
@@ -126,7 +93,6 @@ If any operations fails, a `FailedOperation` is rased and the script will:
 - Exit gracefully
 
 #### Configuration file: `config.yaml`
-Paths
 ```yaml
 global:
   included_classes: ["Aves", "Insecta"]  # Species class to analyze
@@ -162,27 +128,27 @@ Output:
 <summary>Click me</summary>
 You will need to switch to branch `legacy-manual-branch` for this.
 
-### 1. Download and extract iNaturelist 2017
+#### 1. Download and extract iNaturelist 2017
 [https://github.com/visipedia/inat_comp/tree/master/2017](https://github.com/visipedia/inat_comp/tree/master/2017)
 
 We only uses the data in `Aves/` and `Insecta/`.
 Extract the dataset with the program of your choice to `data/inat2017`
 
-### 2. Run the web crawler to obtain the dataset from Haute-Garonne
+#### 2. Run the web crawler to obtain the dataset from Haute-Garonne
 
 ```bash
 python scripts/haute_garonne_web_crawl.py
 ```
 This generates `output/iNaturalist_All_Species_Full.json`
 
-### 3. Run `scripts/dataset_analyzer.py` on both datasets to extract their properties
+#### 3. Run `scripts/dataset_analyzer.py` on both datasets to extract their properties
 ```bash
 cd scripts
 python dataset_analyzer.py ../data/inat2017 # path to inat2017
 python dataset_analyzer.py output/iNaturalist_All_Species_Full.json # path to the HG JSON file
 ```
 
-### 4. Match Species Between Datasets
+#### 4. Match Species Between Datasets
 
 This step uses `cross_reference.py` to find common species between iNaturelist 2017 and Haute-Garonne
 
@@ -197,7 +163,7 @@ python scripts/cross_reference.py
 
 This generates `output/matched_species_Aves_Insecta.json`
 
-### 5. Copy matched species
+#### 5. Copy matched species
 This creates the Haute-Garonne dataset that we can use for training later.
 
 Modify `SRC_DATASET` and `DST_DATASET` to the correspond directory of the dataset:
@@ -209,7 +175,7 @@ python scripts/copy_matched_species.py
 ```
 This will create a new dataset under location: `DST_DATASET`
 
-### 6. Handle "Other" classification
+#### 6. Handle "Other" classification
 
 This script needs to be run in the base directory of the repo.
 The model needs an "Other" class to detect unknown species:
@@ -222,7 +188,7 @@ The model needs an "Other" class to detect unknown species:
 python scripts/other_classifier.py
 ```
 
-### 7. Generate Dataset Manifest
+#### 7. Generate Dataset Manifest
 
 Before converting to TFRecords, we create `train.txt` and `val.txt`
 
