@@ -15,7 +15,7 @@ This project explores the application of transfer learning on a small subset of 
 
 ### Objectives
 - Fine-tuned the model on a regional species subset
-- Implement an 'Other' classification for unrecognized species
+- Implement an 'Other' classification for non-dominant species
 - Optimize the `logits` layer (final characterization) layer to improve inference performance
 - Analyze the feature maps of the model if fine-tuning proves insufficient
 - Improve real-time performance & efficiency of classification models
@@ -79,7 +79,13 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 5. Install TensorFlow 1.11
+### 5. Install required dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 6. Install TensorFlow 1.11
 
 You can either install through `pip` or download the prebuilt wheel on [pypi.org](https://pypi.org/project/tensorflow-gpu/1.11.0/#files). Make sure you download the `cp36-arch.whl` where `arch` is your OS of choice.
 
@@ -93,11 +99,7 @@ Or
 pip install tensorflow_gpu-1.11.0-cp36-cp36m-manylinux1_x86_64.whl 
 ```
 
-### 6. Install required dependencies
 
-```bash
-pip install numpy scipy matplotlib pillow scikit-learn scikit-image pyemd
-```
 
 ### 7. Verify if TensorFlow has been installed successfully
 
@@ -109,59 +111,54 @@ python -c "import tensorflow as tf; print(tf.test.is_gpu_available())"
 **This project uses a subset of iNaturelist 2017 combined with species from Haute-Garonne. The dataset must be manually downloaded and processed before training.**
 
 > This stage uses a newer version of Python in order to leverage their new features, please set up another virtual environment with Python 3.11+. Install all the necessary packages through `pip install requirements.txt`
-### Dataset Preparation using `dataset_orchestrator.py`
-Here are the stages in the pipeline:
+### Dataset Preparation
+We provide a modular and automated pipeline using the dataset_builder package. Configuration is handled via `config.yaml`.
+
+### Steps (automated by `dataset_orchestrator.py`)
+
 1. Crawl species from iNaturalist (Haute-Garonne region)
 2. Analyze dataset structure (class/species breakdown, image counts)
-3. Cross-reference species between iNat2017 and Haute-Garonne
-4. Copy matched species into a new dataset structure
-5. Create a full dataset with unmatched species grouped into 'Other'
-6. Re-analyze the new dataset for consistency
-7. Create a reduced dataset keeping only dominant species, rest into 'Other'
-8. Analyze the reduced dataset
-9. Generate train/validation manifests (5050 split by default unless specified in the config)
+3. Cross-reference species between source and regional datasets
+4. Copy matched species into a new dataset to create regional datasets
+5. Label species based on dominant threshold
+5. Generate train/validation manifests 
 10. Produce visualizations (bar charts, CDF, PPF, Venn diagrams)
 
 If any operations fails, a `FailedOperation` is rased and the script will:
 - Print a traceback
-- Call `cleanup()` to delete any partially written files
 - Exit gracefully
 
 #### Configuration file: `config.yaml`
 Paths
 ```yaml
-paths:
-  src_dataset: "/run/media/train_val_images"  # iNat2017 root
-  inter_dataset: "./data/haute_garonne"                             # Species extracted from web crawl
-  dst_dataset: "./data/inat2017_other"                              # Full dataset with 'Other'
-  dst_dataset_small: "./data/haute_garonne_other"                   # Dominant-only dataset
-  matched_species_json: "./scripts/output/matched_species.json"    # Output of species comparison
-  web_crawl_output_json: "./scripts/output/haute_garonne.json"     # Output of web crawling
-  output_dir: "./scripts/output"                                    # Base folder for logs, plots, metadata
-```
+global:
+  included_classes: ["Aves", "Insecta"]  # Species class to analyze
+  verbose: false  # Print extra debugging info
+  overwrite: false  # Overwrite existing file
 
-Web crawling parameters
-```yaml
+paths:
+  src_dataset: "./data/inat2017"  # Source dataset
+  dst_dataset: "./data/haute_garonne"  # Target dataset
+  web_crawl_output_json: "./output/haute_garonne.json"  # Path to save crawl result
+  output_dir: "./output"  # Path to save all JSON files
+
 web_crawl:
   total_pages: 104
   base_url: "https://www.inaturalist.org/check_lists/32961-Haute-Garonne-Check-List?page="
   delay_between_requests: 1
-```
 
-Train/Validation Split and Dominant Threshold
-```yaml
 train_val_split:
   train_size: 0.8
   random_state: 42
-  included_classes: ["Aves", "Insecta"]
+  dominant_threshold: 0.5
 ```
 
 Output:
 - `*_species.json`: class → list of species
-- `*_properties.json`: class/species → image count
-- `matched_species.json`: for dataset comparison
+- `*_composition.json`: class/species → {species: count}
+- `matched_species.json`: Cross-reference results
+- `train.parquet`, `val.parquet`, `dataset_manifest.parquet`: Data splits
 - `plots/`: CDF, PPF, Venn diagrams, class bar charts
-- `train.txt, val.txt`: dataset splits, saves in the dataset directory
 
 ### Manual way
 <details>
