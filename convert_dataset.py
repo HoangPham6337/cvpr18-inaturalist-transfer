@@ -11,6 +11,7 @@ import math
 import os
 import random
 import sys
+from dataset_builder.core.utility import load_manifest_parquet
 
 import tensorflow as tf
 
@@ -50,20 +51,36 @@ class ImageReader(object):
     return image
 
 
-def _get_filenames_and_labels(dataset_dir):
-  train_filenames = []
-  val_filenames = []
-  train_labels = []
-  val_labels = []
-  for line in open(os.path.join(dataset_dir, 'train.txt'), 'r'):
-    line_list = line.strip().split(': ')
-    train_filenames.append(os.path.join(dataset_dir, line_list[0]))
-    train_labels.append(int(line_list[1]))
-  for line in open(os.path.join(dataset_dir, 'val.txt'), 'r'):
-    line_list = line.strip().split(': ')
-    val_filenames.append(os.path.join(dataset_dir, line_list[0]))
-    val_labels.append(int(line_list[1]))
-  return train_filenames, val_filenames, train_labels, val_labels
+# def _get_filenames_and_labels(dataset_dir):
+#   train_filenames = []
+#   val_filenames = []
+#   train_labels = []
+#   val_labels = []
+#   for line in open(os.path.join(dataset_dir, 'train.txt'), 'r'):
+#     line_list = line.strip().split(': ')
+#     train_filenames.append(os.path.join(dataset_dir, line_list[0]))
+#     train_labels.append(int(line_list[1]))
+#   for line in open(os.path.join(dataset_dir, 'val.txt'), 'r'):
+#     line_list = line.strip().split(': ')
+#     val_filenames.append(os.path.join(dataset_dir, line_list[0]))
+#     val_labels.append(int(line_list[1]))
+#   return train_filenames, val_filenames, train_labels, val_labels
+
+def _get_filenames_and_labels(dataset_dir: str):
+    train_manifest = os.path.join(dataset_dir, 'train.parquet')
+    val_manifest = os.path.join(dataset_dir, 'val.parquet')
+
+    train_entries = load_manifest_parquet(train_manifest)
+    val_entries = load_manifest_parquet(val_manifest)
+
+    train_filenames = [filename for filename, _ in train_entries]
+    train_labels = [label for _, label in train_entries]
+
+    val_filenames = [filename for filename, _ in val_entries]
+    val_labels = [label for _, label in val_entries]
+
+    return train_filenames, val_filenames, train_labels, val_labels
+
 
 
 def _get_dataset_filename(dataset_dir, split_name, shard_id):
